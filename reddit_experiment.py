@@ -115,5 +115,6 @@ for index, row in df.iterrows():
             df.loc[index, "day_5"] = submission.score
         elif (row["start_date"] + datetime.timedelta(days=6)) == today:
             df.loc[index, "day_6"] = submission.score
+        sleep(randint(1,15))
 
 df.to_pickle("reddit_experiment.pickle")
