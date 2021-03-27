@@ -6,7 +6,7 @@ import datetime
 from random import randint
 from time import sleep
 
-number_of_posts = 500
+number_of_posts = 100
 
 
 def user_login(client_id, client_secret, username, password, user_agent):
@@ -79,7 +79,7 @@ while count_ex != number_of_posts and count_con != number_of_posts:
     print(f"New post progress {round((count_ex + count_con)/(number_of_posts * 2), 2)}%", end='\r')
     posts = get_onehundred_new_posts()
     for post_id in posts:
-        sleep(randint(1,5))
+        sleep(randint(1,15))
         if post_id not in df["post_id"] and post_id not in df["post_id"]:
             submission = reddit.submission(post_id)
             if submission.score == 1:
@@ -88,13 +88,15 @@ while count_ex != number_of_posts and count_con != number_of_posts:
                     if upvote != 0:
                         df.loc[len(df)] = [today, post_id, "experiment", 2, 0, 0, 0, 0, 0, 0]
                         count_ex += 1
+                        print(f"New post progress {round((count_ex + count_con)/(number_of_posts * 2), 2)}%", end='\r')
                     else:
                         error_list.append(0)
+                        print("Sleeping... Please wait.", end='\r')
                         sleep(320)
                 elif count_con != number_of_posts:
                     df.loc[len(df)] = [today, post_id, "control", 1, 0, 0, 0, 0, 0, 0]
                     count_con += 1
-    print(f"New post progress {round((count_ex + count_con)/(number_of_posts * 2), 2)}%", end='\r')
+                    print(f"New post progress {round((count_ex + count_con)/(number_of_posts * 2), 2)}%", end='\r')
 
 
 for index, row in df.iterrows():
@@ -113,6 +115,5 @@ for index, row in df.iterrows():
             df.loc[index, "day_5"] = submission.score
         elif (row["start_date"] + datetime.timedelta(days=6)) == today:
             df.loc[index, "day_6"] = submission.score
-    print(f"Updating progress {round(index/(len(df. index)), 2)}%", end='\r')
 
 df.to_pickle("reddit_experiment.pickle")
