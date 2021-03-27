@@ -3,6 +3,8 @@ import random
 from pprint import pprint
 import pandas as pd
 import datetime
+from random import randint
+from time import sleep
 
 number_of_posts = 500
 
@@ -29,7 +31,10 @@ reddit = user_login(
 
 def upvote_single_post(user_id):
     submission = reddit.submission(id=user_id)
-    submission.upvote()
+    try:
+        submission.upvote()
+    except:
+        return 0
 
 
 def get_onehundred_new_posts():
@@ -66,23 +71,34 @@ except FileNotFoundError:
 today = datetime.date.today()
 count_ex = 0
 count_con = 0
+error_list = []
 
 while count_ex != number_of_posts and count_con != number_of_posts:
+    if len(error_list) == 10:
+        break
+    print(f"New post progress {round((count_ex + count_con)/(number_of_posts * 2), 2)}%", end='\r')
     posts = get_onehundred_new_posts()
     for post_id in posts:
+        sleep(randint(1,5))
         if post_id not in df["post_id"] and post_id not in df["post_id"]:
             submission = reddit.submission(post_id)
             if submission.score == 1:
                 if random.randint(0, 1) and count_ex != number_of_posts:
-                    upvote_single_post(post_id)
-                    df.loc[len(df)] = [today, post_id, "experiment", 2, 0, 0, 0, 0, 0, 0]
-                    count_ex += 1
+                    upvote = upvote_single_post(post_id)
+                    if upvote != 0:
+                        df.loc[len(df)] = [today, post_id, "experiment", 2, 0, 0, 0, 0, 0, 0]
+                        count_ex += 1
+                    else:
+                        error_list.append(0)
+                        sleep(320)
                 elif count_con != number_of_posts:
                     df.loc[len(df)] = [today, post_id, "control", 1, 0, 0, 0, 0, 0, 0]
                     count_con += 1
+    print(f"New post progress {round((count_ex + count_con)/(number_of_posts * 2), 2)}%", end='\r')
 
 
 for index, row in df.iterrows():
+    print(f"Updating progress {round(index/(len(df. index)), 2)}%", end='\r')
     if today <= (row["start_date"] + datetime.timedelta(days=6)):
         submission = reddit.submission(row["post_id"])
         if (row["start_date"] + datetime.timedelta(days=1)) == today:
@@ -97,5 +113,6 @@ for index, row in df.iterrows():
             df.loc[index, "day_5"] = submission.score
         elif (row["start_date"] + datetime.timedelta(days=6)) == today:
             df.loc[index, "day_6"] = submission.score
+    print(f"Updating progress {round(index/(len(df. index)), 2)}%", end='\r')
 
 df.to_pickle("reddit_experiment.pickle")
