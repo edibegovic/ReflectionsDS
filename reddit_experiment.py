@@ -79,7 +79,6 @@ while count_ex != number_of_posts and count_con != number_of_posts:
     print(f"New post progress {round((count_ex + count_con)/(number_of_posts * 2), 2)}%", end='\r')
     posts = get_onehundred_new_posts()
     for post_id in posts:
-        sleep(randint(1,15))
         if post_id not in df["post_id"] and post_id not in df["post_id"]:
             submission = reddit.submission(post_id)
             if submission.score == 1:
@@ -92,7 +91,7 @@ while count_ex != number_of_posts and count_con != number_of_posts:
                     else:
                         error_list.append(0)
                         print("Sleeping... Please wait.", end='\r')
-                        sleep(320)
+                        sleep(120)
                 elif count_con != number_of_posts:
                     df.loc[len(df)] = [today, post_id, "control", 1, 0, 0, 0, 0, 0, 0]
                     count_con += 1
@@ -115,6 +114,5 @@ for index, row in df.iterrows():
             df.loc[index, "day_5"] = submission.score
         elif (row["start_date"] + datetime.timedelta(days=6)) == today:
             df.loc[index, "day_6"] = submission.score
-        sleep(randint(1,15))
 
 df.to_pickle("reddit_experiment.pickle")
