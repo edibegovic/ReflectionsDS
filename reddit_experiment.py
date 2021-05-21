@@ -5,7 +5,8 @@ import datetime
 from time import sleep
 from prawcore.exceptions import Forbidden
 
-number_of_posts = 1100
+number_of_posts = 100
+file_name = "Data/reddit_experiment_with_comments_test.pickle"
 
 
 def user_login(client_id, client_secret, username, password, user_agent):
@@ -49,7 +50,7 @@ def get_onehundred_new_posts():
 
 
 try:
-    df = pd.read_pickle("reddit_experiment_with_comments.pickle")
+    df = pd.read_pickle(file_name)
 except FileNotFoundError:
     df = pd.DataFrame(
         columns=[
@@ -84,10 +85,18 @@ try:
 except:
     loop = True
 
+def upvote_retry(post_id):
+    try:
+        upvote = upvote_single_post(post_id)
+        return upvote
+    except:
+        sleep(60)
+        return 1
+
 if loop:
     while count_ex != number_of_posts and count_con != number_of_posts:
-        if len(error_list) == 10:
-            break
+        # if len(error_list) == 10:
+        #     break
         print(f"New post progress {round(((count_ex + count_con)/(number_of_posts * 2))*100, 2)}%", end='\r')
         posts = get_onehundred_new_posts()
         for post_id in posts:
@@ -96,7 +105,9 @@ if loop:
                 com = submission.num_comments
                 if submission.score == 1 and com == 0:
                     if random.randint(0, 1) and count_ex != number_of_posts:
-                        upvote = upvote_single_post(post_id)
+                        upvote = 1
+                        while upvote == 1:
+                            upvote = upvote_retry(post_id)
                         if upvote != 0:
                             df.loc[len(df)] = [today, post_id, "experiment", 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                             count_ex += 1
@@ -104,7 +115,7 @@ if loop:
                         else:
                             error_list.append(0)
                             print("Sleeping... Please wait.", end='\r')
-                            sleep(320)
+                            sleep(60)
                     elif count_con != number_of_posts:
                         df.loc[len(df)] = [today, post_id, "control", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                         count_con += 1
@@ -118,7 +129,7 @@ if today <= (max(df["start_date"]) + datetime.timedelta(days=6)):
                 submission = reddit.submission(row["post_id"])
             except:
                 print("Sleeping... Please wait.", end='\r')
-                sleep(60)
+                sleep(10)
                 submission = reddit.submission(row["post_id"])
             if (row["start_date"] + datetime.timedelta(days=1)) == today:
                 try:
@@ -126,7 +137,7 @@ if today <= (max(df["start_date"]) + datetime.timedelta(days=6)):
                     df.loc[index, "day_1_comments"] = submission.num_comments
                 except:
                     print("Sleeping... Please wait.", end='\r')
-                    sleep(60)
+                    sleep(10)
                     try:
                         df.loc[index, "day_1"] = submission.score
                         df.loc[index, "day_1_comments"] = submission.num_comments
@@ -139,7 +150,7 @@ if today <= (max(df["start_date"]) + datetime.timedelta(days=6)):
                     df.loc[index, "day_2_comments"] = submission.num_comments
                 except:
                     print("Sleeping... Please wait.", end='\r')
-                    sleep(60)
+                    sleep(10)
                     try:
                         df.loc[index, "day_2"] = submission.score
                         df.loc[index, "day_2_comments"] = submission.num_comments
@@ -152,7 +163,7 @@ if today <= (max(df["start_date"]) + datetime.timedelta(days=6)):
                     df.loc[index, "day_3_comments"] = submission.num_comments
                 except:
                     print("Sleeping... Please wait.", end='\r')
-                    sleep(60)
+                    sleep(10)
                     try:
                         df.loc[index, "day_3"] = submission.score
                         df.loc[index, "day_3_comments"] = submission.num_comments
@@ -165,7 +176,7 @@ if today <= (max(df["start_date"]) + datetime.timedelta(days=6)):
                     df.loc[index, "day_4_comments"] = submission.num_comments
                 except:
                     print("Sleeping... Please wait.", end='\r')
-                    sleep(60)
+                    sleep(10)
                     try:
                         df.loc[index, "day_4"] = submission.score
                         df.loc[index, "day_4_comments"] = submission.num_comments
@@ -178,7 +189,7 @@ if today <= (max(df["start_date"]) + datetime.timedelta(days=6)):
                     df.loc[index, "day_5_comments"] = submission.num_comments
                 except:
                     print("Sleeping... Please wait.", end='\r')
-                    sleep(60)
+                    sleep(10)
                     try:
                         df.loc[index, "day_5"] = submission.score
                         df.loc[index, "day_5_comments"] = submission.num_comments
@@ -191,11 +202,12 @@ if today <= (max(df["start_date"]) + datetime.timedelta(days=6)):
                     df.loc[index, "day_6_comments"] = submission.num_comments
                 except:
                     print("Sleeping... Please wait.", end='\r')
-                    sleep(60)
+                    sleep(10)
                     try:
                         df.loc[index, "day_6"] = submission.score
                         df.loc[index, "day_6_comments"] = submission.num_comments
                     except Forbidden:
                         df.loc[index, "day_6"] =  df.loc[index, "day_5"]
                         df.loc[index, "day_6_comments"] =  df.loc[index, "day_5_comments"]
-df.to_pickle("reddit_experiment_with_comments.pickle")
+
+df.to_pickle(file_name)
